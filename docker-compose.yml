@@ -1,0 +1,168 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=NewsDB
+    volumes: 
+      - ./postgres-data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "wal_level=logical"
+
+  zookeeper:
+    image: debezium/zookeeper
+    platform: linux/x86_64
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    volumes:
+      - "./zookeeper_data:/zookeeper_data"
+
+  kafka:
+    image: debezium/kafka
+    platform: linux/x86_64
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,OUTSIDE://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+    volumes:
+      - "./kafka_data:/kafka/data"
+      - "./kafka_logs:/kafka/logs"
+      - "./kafka_config:/kafka/config"
+
+  connect:
+    image: debezium/connect
+    platform: linux/x86_64
+    container_name: connect
+    ports:
+      - 8083:8083
+    environment:
+      - BOOTSTRAP_SERVERS=kafka:29092
+      - GROUP_ID=1
+      - CONFIG_STORAGE_TOPIC=my_connect_configs
+      - OFFSET_STORAGE_TOPIC=my_connect_offsets
+      - STATUS_STORAGE_TOPIC=my_connect_statuses
+    depends_on:
+      - zookeeper
+      - kafka
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8090:8090"
+    restart: always
+    environment:
+      - SERVER_PORT=8090
+      - KAFKA_CLUSTERS_0_NAME=localhost
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
+
+  debezium-ui:
+    image: debezium/debezium-ui
+    platform: linux/x86_64
+    container_name: debezium-ui
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      - KAFKA_CONNECT_URIS=http://connect:8083
+
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: NewsReadDB
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_BASICAUTH_USERNAME: 'root'
+      ME_CONFIG_BASICAUTH_PASSWORD: 'password'
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: 'true'
+      ME_CONFIG_MONGODB_URL: mongodb://root:password@mongo:27017/
+  
+  gateway.api:
+      container_name: gateway-api
+      restart: always
+      build:
+        context: .
+        dockerfile: src/Gateway.Api/Dockerfile
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Production
+        - ASPNETCORE_URLS=http://+:80
+      ports:
+        - "5500:80"
+
+  write-api:
+      container_name: write-api
+      restart: always
+      build:
+        context: .
+        dockerfile: src/Write.Api/Dockerfile
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Production
+        - ASPNETCORE_URLS=http://+:80
+      ports:
+        - "5501:80"
+
+  read-api:
+      container_name: read-api
+      restart: always
+      build:
+        context: .
+        dockerfile: src/Read.Api/Dockerfile
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Production
+        - ASPNETCORE_URLS=http://+:80
+      ports:
+        - "5502:80"
+
+  data-sync-consumer:
+      container_name: data-sync-consumer
+      restart: always
+      build:
+        context: .
+        dockerfile: src/Consumers.Data.Sync/Dockerfile
+      environment:
+        - ASPNETCORE_ENVIRONMENT=Production
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+  kafka_logs:
+    driver: local
+  kafka_config:
+    driver: local
+  postgres-data:
