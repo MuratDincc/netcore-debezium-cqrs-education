@@ -1,0 +1,220 @@
+{
+	"info": {
+		"_postman_id": "fe0e8bb7-c219-4496-8e45-a305be4afecf",
+		"name": "Debezium - Course",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1819146"
+	},
+	"item": [
+		{
+			"name": "API",
+			"item": [
+				{
+					"name": "Create News",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Test 1\",\n  \"shortDesc\": \"Test 1\",\n  \"longDesc\": \"TESTTTTT 11\",\n  \"published\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5500/api/v1/news",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5500",
+							"path": [
+								"api",
+								"v1",
+								"news"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get News",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5500/api/v1/news",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5500",
+							"path": [
+								"api",
+								"v1",
+								"news"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get News By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5500/api/v1/news/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5500",
+							"path": [
+								"api",
+								"v1",
+								"news",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Get Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/connectors/news-activity/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"connectors",
+						"news-activity",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Task Status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/connectors/news-activity/tasks/0/status",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"connectors",
+						"news-activity",
+						"tasks",
+						"0",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Connector Plugins",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/connector-plugins",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"connector-plugins"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Connector Configuration",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/connectors/news-activity/config",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"connectors",
+						"news-activity",
+						"config"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Connector",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/connectors/news-activity",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"connectors",
+						"news-activity"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Connector",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"news-activity\",\n    \"config\": {\n        \"plugin.name\": \"pgoutput\",\n        \"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\",\n        \"database.hostname\": \"host.docker.internal\",\n        \"database.port\": \"5432\",\n        \"database.user\": \"postgres\",\n        \"database.password\": \"123456\",\n        \"database.dbname\": \"NewsDB\",\n        \"table.include.list\": \"public.News\",\n        \"topic.prefix\": \"data\",\n        \"decimal.handling.mode\": \"double\",\n        \"time.precision.mode\": \"connect\",\n        \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n        \"key.converter.schemas.enable\": \"false\",\n        \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n        \"value.converter.schemas.enable\": \"false\",\n        \"include.schema.changes\": \"false\",\n        \"transforms.filter.condition\": \"value.op == 'c' || value.op == 'u' || value.op == 'd'\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8083/connectors",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"connectors"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
